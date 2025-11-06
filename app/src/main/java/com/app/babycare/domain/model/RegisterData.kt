@@ -1,0 +1,11 @@
+package com.app.babycare.domain.model
+
+data class RegisterData(
+    val name: String,
+    val email: String,
+    val password: String,
+    val phone: String? = null,
+    val relation: String? = null,
+    val age: Int? = null,
+    val sex: String = "O"
+)
