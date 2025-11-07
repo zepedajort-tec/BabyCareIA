@@ -1,6 +1,7 @@
 package com.app.babycare.di
 
 import com.app.babycare.remote.api.AuthApi
+import com.app.babycare.remote.api.ParentApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,4 +30,8 @@ object NetworkModule {
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi =
         retrofit.create(AuthApi::class.java)
+    @Provides
+    @Singleton
+    fun provideParentsApi(retrofit: Retrofit): ParentApi =
+        retrofit.create(ParentApi::class.java)
 }
