@@ -58,6 +58,11 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = Des
                     navController.navigate(Destinations.LOGIN) {
                         popUpTo(Destinations.REGISTER) { inclusive = true }
                     }
+                },
+                onNavigateToHome = {
+                    navController.navigate(Destinations.HOME) {
+                        popUpTo(Destinations.REGISTER) { inclusive = true }
+                    }
                 }
             )
         }

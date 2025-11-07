@@ -98,7 +98,12 @@ fun SplashScreen(
                             .clip(RoundedCornerShape(24.dp))
                             .background(Primary)
                     ) {
-
+                        Text(
+                            text = "\uD83D\uDC76",
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Primary
+                        )
                     }
                 }
 

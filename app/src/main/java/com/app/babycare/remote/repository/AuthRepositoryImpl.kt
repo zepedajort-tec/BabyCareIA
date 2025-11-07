@@ -30,8 +30,7 @@ class AuthRepositoryImpl(
                 password = data.password,
                 phone = data.phone,
                 relation = data.relation,
-                age = data.age,
-                sex = data.sex
+                age = data.age
             )
             val response = api.register(dto)
             Result.success(response)

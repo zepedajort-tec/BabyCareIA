@@ -13,28 +13,35 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
@@ -58,38 +65,91 @@ private val BorderColor = Color(0xFFBDE0FE)    // border-color
 @Composable
 fun RegisterScreen(
     viewModel: RegisterViewModel = hiltViewModel(),
+    onNavigateToHome: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
-    // UI-local states for inputs (kept in UI; move to VM if you want persistence)
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var relation by remember { mutableStateOf("") }
+    var ageText by remember { mutableStateOf("") }
+    var showRelationMenu by remember { mutableStateOf(false) }
+
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
     // Observe ViewModel UI state
     val state by viewModel.uiState.collectAsState()
 
-    // Popup control
+    // Control de popup de error
     var showErrorPopup by remember { mutableStateOf(false) }
+    var errorTitle by remember { mutableStateOf("Error de registro") }
+    var errorMessage by remember { mutableStateOf("") }
 
-    // Collect ViewModel events (navigation / show message)
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { ev ->
             when (ev) {
+                is RegisterEvent.NavigateToHome -> onNavigateToHome()
                 is RegisterEvent.NavigateToLogin -> onNavigateToLogin()
                 is RegisterEvent.ShowMessage -> {
+                    errorTitle = "Error de registro"
+                    errorMessage = ev.message
                     showErrorPopup = true
                 }
             }
         }
     }
 
-    // If the ViewModel exposes an error string in uiState, show popup as well
     LaunchedEffect(state.error) {
-        showErrorPopup = state.error != null
+        if (state.error != null) {
+            errorTitle = "Error de registro"
+            errorMessage = state.error!!
+            showErrorPopup = true
+        }
     }
 
-    // Field colors for consistency (Material3)
+    // Función de validación de email
+    fun isValidEmail(email: String): Boolean {
+        return email.isNotEmpty() &&
+                android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    // Función para validar todos los campos
+    fun validateFields(): String? {
+        // Validar nombre
+        if (name.trim().isEmpty()) {
+            return "Nombre incorrecto"
+        }
+
+        // Validar correo
+        if (!isValidEmail(email.trim())) {
+            return "Correo incorrecto"
+        }
+
+        // Validar teléfono
+        if (phone.trim().length != 10) {
+            return "Teléfono incorrecto"
+        }
+
+        // Validar edad
+        val age = ageText.toIntOrNull()
+        if (age == null || age <= 0) {
+            return "Edad incorrecta"
+        }
+
+        // Validar relación
+        if (relation.trim().isEmpty()) {
+            return "Selecciona una relación (Padre/Madre/Otro)"
+        }
+
+        // Validar contraseña
+        if (password.length <= 5) {
+            return "Contraseña incorrecta, debe tener más de 5 caracteres"
+        }
+
+        return null // Todo está correcto
+    }
+
     val fieldColors = TextFieldDefaults.colors(
         focusedTextColor = TextMain,
         unfocusedTextColor = TextMain,
@@ -116,47 +176,54 @@ fun RegisterScreen(
         unfocusedPlaceholderColor = TextSecondary
     )
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = BackgroundLight
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .wrapContentHeight()
-                    .align(Alignment.Center),
-                horizontalAlignment = Alignment.CenterHorizontally
+    Box(modifier = Modifier.fillMaxSize()) {
+        // ✅ Mostrar LoadingScreen cuando isLoading es true
+        if (state.isLoading) {
+            LoadingScreen()
+        } else {
+            // Pantalla de registro normal
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = BackgroundLight
             ) {
-                // Logo circle
-                Box(
+                Column(
                     modifier = Modifier
-                        .size(80.dp)
-                        .background(PastelPink, shape = CircleShape),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .wrapContentHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // You can place an Icon here
-                }
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    // Logo circle
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(PastelPink, shape = CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "\uD83D\uDC76",
+                            fontSize = 40.sp
+                        )
+                    }
 
-                // Title
-                Text(
-                    text = "Crea tu cuenta",
-                    color = TextMain,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                )
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                Spacer(modifier = Modifier.height(20.dp))
+                    // Title
+                    Text(
+                        text = "Crea tu cuenta",
+                        color = TextMain,
+                        fontSize = 28.sp
+                    )
 
-                // Name input
-                Column(modifier = Modifier.fillMaxWidth()) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Name
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        placeholder = { Text("Ingresa tu nombre") },
+                        placeholder = { Text("Nombre") },
                         singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -164,108 +231,245 @@ fun RegisterScreen(
                         shape = RoundedCornerShape(16.dp),
                         colors = fieldColors
                     )
-                }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                // Email input
-                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Email
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        placeholder = { Text("Ingresa tu correo electrónico") },
+                        placeholder = { Text("Correo Electrónico") },
                         singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
-                        colors = fieldColors
+                        colors = fieldColors,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                     )
-                }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                // Password input
-                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Phone
+                    OutlinedTextField(
+                        value = phone,
+                        onValueChange = {
+                            // Limitar a 10 dígitos
+                            if (it.length <= 10 && it.all { char -> char.isDigit() }) {
+                                phone = it
+                            }
+                        },
+                        placeholder = { Text("Teléfono") },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = fieldColors,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Age and Relation row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Age
+                        OutlinedTextField(
+                            value = ageText,
+                            onValueChange = { new ->
+                                // Permitir solo dígitos y máximo 3 caracteres
+                                if (new.all { it.isDigit() } && new.length <= 3) {
+                                    ageText = new
+                                }
+                            },
+                            placeholder = { Text("Edad") },
+                            singleLine = true,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = fieldColors,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+
+                        Box(modifier = Modifier.weight(1f)) {
+                            // Campo readOnly que abre el menú
+                            OutlinedTextField(
+                                value = relation,
+                                onValueChange = { /* no editable directamente */ },
+                                placeholder = { Text("Padre/Madre") },
+                                readOnly = true,
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.KeyboardArrowDown,
+                                        contentDescription = "Abrir",
+                                        tint = if (showRelationMenu) Primary else TextSecondary
+                                    )
+                                },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = fieldColors
+                            )
+
+                            // Capa clickable invisible sobre el TextField
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable { showRelationMenu = !showRelationMenu }
+                            )
+
+                            DropdownMenu(
+                                expanded = showRelationMenu,
+                                onDismissRequest = { showRelationMenu = false },
+                                modifier = Modifier
+                                    .wrapContentSize()
+                                    .background(Color.White, RoundedCornerShape(12.dp))
+                                    .shadow(4.dp, RoundedCornerShape(12.dp))
+                            ) {
+                                listOf("Padre", "Madre", "Otro").forEach { option ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = option,
+                                                color = if (relation == option) Primary else TextMain
+                                            )
+                                        },
+                                        onClick = {
+                                            relation = option
+                                            showRelationMenu = false
+                                        },
+                                        modifier = Modifier.background(
+                                            if (relation == option) Primary.copy(alpha = 0.1f)
+                                            else Color.Transparent
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Password
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        placeholder = {
-                            Text("Crea tu contraseña")
-                        },
+                        placeholder = { Text("Contraseña") },
                         singleLine = true,
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.Lock,
+                                contentDescription = null
+                            )
+                        },
+                        trailingIcon = {
+                            Text(
+                                text = if (passwordVisible) "Ocultar" else "Mostrar",
+                                modifier = Modifier
+                                    .clickable { passwordVisible = !passwordVisible }
+                                    .padding(8.dp),
+                                color = Primary
+                            )
+                        },
+                        visualTransformation = if (passwordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = fieldColors,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = fieldColors
                     )
-                }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                // Register button — calls ViewModel
-                Button(
-                    onClick = { viewModel.register(name = name.trim(), email = email.trim(), password = password) },
-                    colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .shadow(2.dp, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
-                    enabled = !state.isLoading
-                ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                    } else {
-                        Text(text = "Registrarse", color = Color.White, fontWeight = FontWeight.SemiBold)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Link to login
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(text = "¿Ya tienes una cuenta? ", color = TextSecondary)
-                    Text(
-                        text = "Inicia sesión",
-                        color = Primary,
-                        fontWeight = FontWeight.SemiBold,
+                    // Register button
+                    Button(
+                        onClick = {
+                            // Validar campos antes de registrar
+                            val validationError = validateFields()
+                            if (validationError != null) {
+                                // Mostrar error de validación
+                                errorTitle = "Error de validación"
+                                errorMessage = validationError
+                                showErrorPopup = true
+                            } else {
+                                // Todo correcto, proceder con el registro
+                                val ageInt = ageText.toInt()
+                                viewModel.register(
+                                    name = name.trim(),
+                                    email = email.trim(),
+                                    password = password,
+                                    phone = phone.trim(),
+                                    relation = relation.trim(),
+                                    age = ageInt,
+                                )
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary),
                         modifier = Modifier
-                            .clickable { onNavigateToLogin() }
-                            .padding(start = 4.dp),
-                        textDecoration = TextDecoration.Underline
-                    )
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .shadow(2.dp, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        enabled = !state.isLoading
+                    ) {
+                        Text(text = "Registrarse", color = Color.White)
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Link to login
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = "¿Ya tienes una cuenta? ", color = TextSecondary)
+                        Text(
+                            text = "Inicia sesión",
+                            color = Primary,
+                            modifier = Modifier
+                                .clickable { onNavigateToLogin() }
+                                .padding(start = 4.dp),
+                            textDecoration = TextDecoration.Underline
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
         }
-    }
 
-    // Error popup; when dismissed, clear error in VM
-    ErrorLoginPopup(
-        visible = showErrorPopup,
-        title = "Error de registro",
-        message = state.error ?: "No se pudo registrar",
-        onConfirm = {
-            showErrorPopup = false
-            viewModel.clearError()
-        },
-        onDismiss = {
-            showErrorPopup = false
-            viewModel.clearError()
-        }
-    )
+        // Error popup personalizado (se muestra encima de todo)
+        ErrorLoginPopup(
+            visible = showErrorPopup,
+            title = errorTitle,
+            message = errorMessage,
+            onConfirm = {
+                showErrorPopup = false
+                viewModel.clearError()
+            },
+            onDismiss = {
+                showErrorPopup = false
+                viewModel.clearError()
+            }
+        )
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun RegisterScreenPreview() {
     RegisterScreen(
-        onNavigateToLogin = { /* Preview navigation action */ }
+        onNavigateToLogin = {}
     )
 }

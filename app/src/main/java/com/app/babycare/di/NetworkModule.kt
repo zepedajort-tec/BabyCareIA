@@ -14,7 +14,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "http://TU_IP_O_DOMINIO_DE_BACKEND:8000/" // <--- Cámbialo por el tuyo
+    private const val BASE_URL = "https://super-spoon-jj77qwpgr65x3qg46-8000.app.github.dev/"
 
     @Provides
     @Singleton

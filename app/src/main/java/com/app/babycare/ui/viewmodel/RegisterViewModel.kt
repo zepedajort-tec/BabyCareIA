@@ -12,6 +12,7 @@ import javax.inject.Inject
 data class RegisterUiState(val isLoading: Boolean = false, val error: String? = null)
 
 sealed class RegisterEvent {
+    object NavigateToHome : RegisterEvent()
     object NavigateToLogin : RegisterEvent()
     data class ShowMessage(val message: String) : RegisterEvent()
 }
@@ -27,7 +28,14 @@ class RegisterViewModel @Inject constructor(
     private val _events = MutableSharedFlow<RegisterEvent>(replay = 0)
     val events = _events.asSharedFlow()
 
-    fun register(name: String, email: String, password: String, phone: String? = null, relation: String? = null, age: Int? = null, sex: String? = null) {
+    fun register(
+        name: String,
+        email: String,
+        password: String,
+        phone: String? = null,
+        relation: String? = null,
+        age: Int? = null
+    ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
@@ -37,13 +45,12 @@ class RegisterViewModel @Inject constructor(
                 password = password,
                 phone = phone,
                 relation = relation,
-                age = age,
-                sex = sex ?: "O"
+                age = age
             )
             repo.register(data).fold(
                 onSuccess = {
                     _uiState.update { it.copy(isLoading = false) }
-                    _events.emit(RegisterEvent.NavigateToLogin)
+                    _events.emit(RegisterEvent.NavigateToHome)
                 },
                 onFailure = {
                     val msg = it.message ?: "Error al registrarse"
