@@ -10,13 +10,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
@@ -65,7 +68,7 @@ private val BorderColor = Color(0xFFBDE0FE)    // border-color
 @Composable
 fun RegisterScreen(
     viewModel: RegisterViewModel = hiltViewModel(),
-    onNavigateToHome: () -> Unit = {},
+    onNavigateToAddBaby: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
     var name by remember { mutableStateOf("") }
@@ -89,7 +92,7 @@ fun RegisterScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { ev ->
             when (ev) {
-                is RegisterEvent.NavigateToHome -> onNavigateToHome()
+                is RegisterEvent.NavigateToAddBaby -> onNavigateToAddBaby()
                 is RegisterEvent.NavigateToLogin -> onNavigateToLogin()
                 is RegisterEvent.ShowMessage -> {
                     errorTitle = "Error de registro"
@@ -147,7 +150,7 @@ fun RegisterScreen(
             return "Contraseña incorrecta, debe tener más de 5 caracteres"
         }
 
-        return null // Todo está correcto
+        return null
     }
 
     val fieldColors = TextFieldDefaults.colors(
@@ -177,7 +180,6 @@ fun RegisterScreen(
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // ✅ Mostrar LoadingScreen cuando isLoading es true
         if (state.isLoading) {
             LoadingScreen()
         } else {
@@ -190,7 +192,9 @@ fun RegisterScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .wrapContentHeight(),
+                        .wrapContentHeight()
+                        .verticalScroll(rememberScrollState())
+                        .imePadding(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(modifier = Modifier.height(20.dp))
@@ -402,7 +406,6 @@ fun RegisterScreen(
                                 errorMessage = validationError
                                 showErrorPopup = true
                             } else {
-                                // Todo correcto, proceder con el registro
                                 val ageInt = ageText.toInt()
                                 viewModel.register(
                                     name = name.trim(),
@@ -449,8 +452,7 @@ fun RegisterScreen(
             }
         }
 
-        // Error popup personalizado (se muestra encima de todo)
-        ErrorLoginPopup(
+        ErrorPopup(
             visible = showErrorPopup,
             title = errorTitle,
             message = errorMessage,

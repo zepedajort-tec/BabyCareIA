@@ -1,7 +1,7 @@
 package com.app.babycare.domain.model
 
 data class Parent(
-    val id: String,
+    val id: Int,
     val name: String,
     val email: String,
     val phone: String? = null,

@@ -4,11 +4,11 @@ import com.app.babycare.domain.model.Parent
 import com.app.babycare.domain.repository.ParentRepository
 import com.app.babycare.remote.api.ParentApi
 import com.app.babycare.remote.dto.UpdateParentDto
+import javax.inject.Inject
 
-class ParentRepositoryImpl (
+class ParentRepositoryImpl @Inject constructor(
     private val api: ParentApi
-): ParentRepository
-{
+): ParentRepository {
 
     override suspend fun getAllParents(): Result<List<Parent>> {
         return try {
