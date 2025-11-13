@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import com.app.babycare.ui.compose.AddBabyScreen
 import com.app.babycare.ui.compose.HomeScreen
 import com.app.babycare.ui.compose.LoginScreenWithViewModel
+import com.app.babycare.ui.compose.ProfileScreen
 import com.app.babycare.ui.compose.RegisterScreen
 import com.app.babycare.ui.compose.SplashScreen
 import com.app.babycare.ui.viewmodel.AddBabyEvent
@@ -17,6 +18,7 @@ import com.app.babycare.ui.viewmodel.AddBabyViewModel
 import com.app.babycare.ui.viewmodel.HomeViewModel
 import com.app.babycare.ui.viewmodel.LoginEvent
 import com.app.babycare.ui.viewmodel.LoginViewModel
+import com.app.babycare.ui.viewmodel.ProfileViewModel
 import com.app.babycare.ui.viewmodel.RegisterViewModel
 import com.app.babycare.ui.viewmodel.SplashViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -150,6 +152,13 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = Des
                 onNewRecordClick= {},
                 onViewRecordsClick= {},
                 onRecordClick = {}
+            )
+        }
+        composable(Destinations.PROFILE) {
+            val viewModel: ProfileViewModel = hiltViewModel()
+
+            ProfileScreen(
+
             )
         }
     }

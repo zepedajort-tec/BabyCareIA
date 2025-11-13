@@ -6,4 +6,5 @@ object Destinations {
     const val REGISTER = "register"
     const val HOME = "home"
     const val ADD_BABY = "add_baby"
+    const val PROFILE = "profile"
 }
