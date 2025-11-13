@@ -120,18 +120,18 @@ fun HomeScreen(
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "La importancia del tummy time",
+                                text = "Category",
                                 color = TextMain,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Colocar a tu bebé boca abajo durante cortos períodos mientras está despierto ayuda a fortalecer los músculos del cuello y los hombros.",
+                                text = "tip_text",
                                 color = TextSecondary,
                                 style = MaterialTheme.typography.bodySmall
                             )
 
-                            Text(
+                            /*Text(
                                 text = "Ver todos los tips",
                                 color = Primary,
                                 fontWeight = FontWeight.SemiBold,
@@ -139,7 +139,7 @@ fun HomeScreen(
                                     .align(Alignment.End)
                                     .padding(top = 8.dp)
                                     .clickable { onViewAllTips() }
-                            )
+                            )*/
                         }
                     }
                 }
