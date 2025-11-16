@@ -9,10 +9,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
@@ -25,8 +28,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,10 +45,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.app.babycare.ui.viewmodel.LoginEvent
-import com.app.babycare.ui.viewmodel.LoginViewModel
-import kotlinx.coroutines.flow.collectLatest
+import com.app.babycare.ui.viewmodel.LoginUiState
 
 private val Primary = Color(0xFFA2D2FF)        // primary
 private val BackgroundLight = Color(0xFFFEFEFE) // background-light
@@ -59,17 +57,15 @@ private val BorderColor = Color(0xFFBDE0FE)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreenWithViewModel(
-    viewModel: LoginViewModel = hiltViewModel(),
-    onNavigateToHome: () -> Unit = {},
-    onNavigateToRegister: () -> Unit = {}
+    loginUiState: LoginUiState,
+    onLogin: (String, String) -> Unit,
+    onNavigateToRegister: () -> Unit,
+    onClearError: () -> Unit,
 ) {
     // Local input states (UI-owned)
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-
-    // Observe ViewModel state
-    val state by viewModel.uiState.collectAsState()
 
     // Control de popup de error
     var showErrorPopup by remember { mutableStateOf(false) }
@@ -102,7 +98,14 @@ fun LoginScreenWithViewModel(
             return "Contraseña incorrecta, debe tener más de 5 caracteres"
         }
 
-        return null // Todo está correcto
+        return null
+    }
+
+    // Mostrar error cuando cambia el estado
+    if (loginUiState.error != null && !showErrorPopup) {
+        errorTitle = "Error de inicio de sesión"
+        errorMessage = loginUiState.error
+        showErrorPopup = true
     }
 
     val fieldColors = TextFieldDefaults.colors(
@@ -131,33 +134,11 @@ fun LoginScreenWithViewModel(
         unfocusedPlaceholderColor = TextSecondary
     )
 
-    // Collect events (navigation / messages)
-    LaunchedEffect(Unit) {
-        viewModel.events.collectLatest { event ->
-            when (event) {
-                is LoginEvent.NavigateToHome -> onNavigateToHome()
-                is LoginEvent.NavigateToRegister -> onNavigateToRegister()
-                is LoginEvent.ShowMessage -> {
-                    errorTitle = "Error de inicio de sesión"
-                    errorMessage = event.message
-                    showErrorPopup = true
-                }
-            }
-        }
-    }
-
-    // When state.error appears, enable popup
-    LaunchedEffect(state.error) {
-        if (state.error != null) {
-            errorTitle = "Error de inicio de sesión"
-            errorMessage = state.error!!
-            showErrorPopup = true
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        // ✅ Mostrar LoadingScreen cuando isLoading es true
-        if (state.isLoading) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        if (loginUiState.isLoading) {
             LoadingScreen()
         } else {
             // Pantalla de login normal
@@ -168,7 +149,9 @@ fun LoginScreenWithViewModel(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState())
+                        .imePadding(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -268,8 +251,7 @@ fun LoginScreenWithViewModel(
                                 errorMessage = validationError
                                 showErrorPopup = true
                             } else {
-                                // Todo correcto, proceder con el login
-                                viewModel.login(username.trim(), password)
+                                onLogin(username.trim(), password)
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Primary),
@@ -277,7 +259,7 @@ fun LoginScreenWithViewModel(
                             .fillMaxWidth()
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
-                        enabled = !state.isLoading
+                        enabled = !loginUiState.isLoading
                     ) {
                         Text(
                             "Iniciar sesión",
@@ -302,25 +284,24 @@ fun LoginScreenWithViewModel(
                         },
                         textAlign = TextAlign.Center,
                         modifier = Modifier
-                            .clickable { viewModel.navigateToRegister() }
+                            .clickable { onNavigateToRegister() }
                             .padding(top = 8.dp)
                     )
                 }
             }
         }
 
-        // Error popup (se muestra encima de todo)
-        ErrorLoginPopup(
+        ErrorPopup(
             visible = showErrorPopup,
             title = errorTitle,
             message = errorMessage,
             onConfirm = {
                 showErrorPopup = false
-                viewModel.clearError()
+                onClearError()
             },
             onDismiss = {
                 showErrorPopup = false
-                viewModel.clearError()
+                onClearError()
             }
         )
     }
@@ -330,6 +311,11 @@ fun LoginScreenWithViewModel(
 @Composable
 private fun LoginScreenWithViewModelPreview() {
     MaterialTheme {
-        LoginScreenWithViewModel()
+        LoginScreenWithViewModel(
+            loginUiState = LoginUiState(),
+            onLogin = { _, _ -> },
+            onNavigateToRegister = {},
+            onClearError = {}
+        )
     }
 }

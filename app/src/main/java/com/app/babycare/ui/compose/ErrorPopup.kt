@@ -29,25 +29,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Color tokens taken from your Tailwind config
-private val Primary = Color(0xFFB3E5FC)       // primary
-private val Accent = Color(0xFFFFC1E3)        // accent
-private val MutedRed = Color(0xFFE57373)      // muted-red
-private val TextLight = Color(0xFF546E7A)     // text-light
-private val FieldBgLight = Color(0xFFFFFFFF)  // field-bg-light
-private val FieldBorderLight = Color(0xFFD1D5DB) // field-border-light
+private val MutedRed = Color(0xFFE57373)
+private val TextLight = Color(0xFF546E7A)
+private val FieldBgLight = Color(0xFFFFFFFF)
 
-/**
- * Error popup shown on top of the screen.
- *
- * @param visible show/hide the popup
- * @param title title text (default "Error de inicio de sesión")
- * @param message body message
- * @param onConfirm called when user taps the primary button
- * @param onDismiss called when background is clicked (optional)
- */
 @Composable
-fun ErrorLoginPopup(
+fun ErrorPopup(
     visible: Boolean,
     title: String = "Error de inicio de sesión",
     message: String = "Usuario o contraseña incorrectos. Por favor, inténtalo de nuevo.",
@@ -59,7 +46,6 @@ fun ErrorLoginPopup(
         enter = fadeIn(),
         exit = fadeOut()
     ) {
-        // Full screen overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -67,7 +53,6 @@ fun ErrorLoginPopup(
                 .clickable(enabled = onDismiss != null) { onDismiss?.invoke() },
             contentAlignment = Alignment.Center
         ) {
-            // Card container
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = FieldBgLight,
@@ -94,18 +79,11 @@ fun ErrorLoginPopup(
                                 text = "\u2757",
                                 fontSize = 32.sp
                             )
-                            /*Icon(
-                                imageVector = Icons.Default.Error,
-                                contentDescription = "Error",
-                                tint = MutedRed,
-                                modifier = Modifier.size(30.dp)
-                            )*/
                         }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Title
                     Text(
                         text = title,
                         color = TextLight,
@@ -116,7 +94,6 @@ fun ErrorLoginPopup(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Message
                     Text(
                         text = message,
                         color = TextLight.copy(alpha = 0.78f),
@@ -127,7 +104,6 @@ fun ErrorLoginPopup(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Confirm button
                     Button(
                         onClick = onConfirm,
                         colors = ButtonDefaults.buttonColors(containerColor = MutedRed),
@@ -146,8 +122,8 @@ fun ErrorLoginPopup(
 
 @Preview(showBackground = true, backgroundColor = 0xFFF1F8FF)
 @Composable
-private fun ErrorLoginPopupPreview() {
-    ErrorLoginPopup(
+private fun ErrorPopupPreview() {
+    ErrorPopup(
         visible = true,
         onConfirm = {}
     )
