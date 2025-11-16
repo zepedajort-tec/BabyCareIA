@@ -2,33 +2,68 @@ package com.app.babycare.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.babycare.data.auth.TokenStore
 import com.app.babycare.domain.repository.DevTipsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class TipUi(
+    val category: String = "",
+    val tipText: String = ""
+)
+
+data class HomeUiState(
+    val tips: List<TipUi> = emptyList(),
+    val tipOfDay: TipUi = TipUi(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val devTipsRepository: DevTipsRepository
-): ViewModel() {
+) : ViewModel() {
 
-    /**
-     * Compartir en copilot (HomeViewModel.kt, HomeScreen.kt, AppaNavGraph.kt, EncryptedTokenStore.kt)
-     *
-     * Completame el codigo del HomeViewModel para que actualice el HomeScreen con una lista de consejos de desarrollo
-     * como titulo por la categoria y como descripcion el tip_text
-     */
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState: StateFlow<HomeUiState> = _uiState
+
+    init {
+        getDevTips()
+    }
+
     fun getDevTips() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
             devTipsRepository.getAllDevTips().fold(
                 onSuccess = { devTips ->
-                    val devtip = devTips.first()
-                    // Aquí puedes actualizar el estado de la UI con la lista de consejos de desarrollo
-                    // Por ejemplo, podrías usar un StateFlow o LiveData para exponer los datos al HomeScreen
+                    // Mapear usando los campos esperados (category, description)
+                    val mapped = devTips.map { devTip ->
+                        TipUi(
+                            category = devTip.category,
+                            tipText = devTip.description
+                        )
+                    }
+
+                    _uiState.update {
+                        it.copy(
+                            tips = mapped,
+                            tipOfDay = mapped.firstOrNull() ?: TipUi(),
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    }
                 },
                 onFailure = { error ->
-                    // Manejar el error, por ejemplo, mostrando un mensaje en la UI
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.message ?: "Error al recuperar tips"
+                        )
+                    }
                 }
             )
         }
