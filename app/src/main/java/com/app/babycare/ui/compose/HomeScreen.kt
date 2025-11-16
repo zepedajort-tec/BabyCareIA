@@ -76,7 +76,7 @@ fun HomeScreen(
             item {
                 Header(
                     userGreeting = userGreeting,
-                    onChildFriendlyClick = onChildFriendlyClick,
+                    onChildFriendlyClick = onProfileClick,
                     onLogoutClick = onLogoutClick
                 )
             }
@@ -223,7 +223,10 @@ private fun Header(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(CircleShape)
-                    .background(PastelPink),
+                    .background(PastelPink)
+                    .clickable {
+                        onChildFriendlyClick()
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Text(

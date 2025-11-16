@@ -129,7 +129,7 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.height(4.dp))
 
                             Text(
-                                text = "Padre/Madre",
+                                text = uiState.parent?.relation ?: "Relación no especificada",
                                 fontSize = 14.sp,
                                 color = TextSecondary
                             )

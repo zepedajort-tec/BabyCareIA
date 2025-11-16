@@ -139,7 +139,7 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = Des
 
             HomeScreen(
                 onProfileClick = {
-
+                    navController.navigate(Destinations.PROFILE)
                 },
                 onLogoutClick = {
                     navController.navigate(Destinations.LOGIN) {
