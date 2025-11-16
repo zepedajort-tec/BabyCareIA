@@ -281,7 +281,7 @@ fun HomeScreen(
                                         style = MaterialTheme.typography.bodySmall
                                     )
 
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                    /*Spacer(modifier = Modifier.height(8.dp))
 
                                     Text(
                                         text = "${uiState.tips.size} tips disponibles",
@@ -291,7 +291,7 @@ fun HomeScreen(
                                             .align(Alignment.End)
                                             .padding(top = 8.dp)
                                             .clickable { onViewAllTips() }
-                                    )
+                                    )*/
                                 }
                             }
                         }

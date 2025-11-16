@@ -71,9 +71,9 @@ class DevTipsRepositoryImpl @Inject constructor(
     private fun DevTipResponseDto.toDomain(): DevTip {
         return DevTip(
             id = this.id,
-            age = this.age,
+            age = this.age_range,
             category = this.category,
-            description = this.description,
+            description = this.tip_text,
             createdAt = this.createdAt
         )
     }
