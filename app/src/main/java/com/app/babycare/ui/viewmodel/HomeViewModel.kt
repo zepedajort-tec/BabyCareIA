@@ -40,7 +40,7 @@ class HomeViewModel @Inject constructor(
 
             devTipsRepository.getAllDevTips().fold(
                 onSuccess = { devTips ->
-                    // Mapeo esperado; si tu modelo usa otro nombre, indícalo y lo adapto.
+                    // Mapear usando los campos esperados (category, description)
                     val mapped = devTips.map { devTip ->
                         TipUi(
                             category = devTip.category,
@@ -48,15 +48,12 @@ class HomeViewModel @Inject constructor(
                         )
                     }
 
-                    // Debug: escribir cuántos tips llegaron para verificar que el repo no esté devolviendo vacío
-                    val debugMsg = "Recibidos ${devTips.size} tips desde repositorio"
-
                     _uiState.update {
                         it.copy(
                             tips = mapped,
                             tipOfDay = mapped.firstOrNull() ?: TipUi(),
                             isLoading = false,
-                            errorMessage = null // temporalmente usamos errorMessage para debug en la UI
+                            errorMessage = null
                         )
                     }
                 },
