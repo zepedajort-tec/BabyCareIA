@@ -144,7 +144,7 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = Des
             HomeScreen(
                 uiState = uiState,
                 onProfileClick = {
-
+                    navController.navigate(Destinations.PROFILE)
                 },
                 onLogoutClick = {
                     navController.navigate(Destinations.LOGIN) {
@@ -161,10 +161,16 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = Des
         }
         composable(Destinations.PROFILE) {
             val viewModel: ProfileViewModel = hiltViewModel()
+            val uiState = viewModel.uiState.collectAsStateWithLifecycle()
 
             ProfileScreen(
+                uiState = uiState.value,
+                onBackClick = {
+                    navController.popBackStack()
+                }
 
             )
+
         }
     }
 }
