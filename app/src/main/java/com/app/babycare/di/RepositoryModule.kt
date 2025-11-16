@@ -5,12 +5,15 @@ import com.app.babycare.remote.repository.AuthRepositoryImpl
 import com.app.babycare.domain.repository.AuthRepository
 import com.app.babycare.domain.repository.BabyRepository
 import com.app.babycare.domain.repository.DevTipsRepository
+import com.app.babycare.domain.repository.HealthRepository
 import com.app.babycare.domain.repository.ParentRepository
 import com.app.babycare.remote.api.BabyApi
 import com.app.babycare.remote.api.DevTipsApi
+import com.app.babycare.remote.api.HealthApi
 import com.app.babycare.remote.api.ParentApi
 import com.app.babycare.remote.repository.BabyRepositoryImpl
 import com.app.babycare.remote.repository.DevTipsRepositoryImpl
+import com.app.babycare.remote.repository.HealthRepositoryImpl
 import com.app.babycare.remote.repository.ParentRepositoryImpl
 import dagger.Module
 import dagger.Provides
@@ -52,5 +55,13 @@ object RepositoryModule {
         api: DevTipsApi
     ): DevTipsRepository {
         return DevTipsRepositoryImpl(api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideHealthRepository(
+        api: HealthApi
+    ): HealthRepository {
+        return HealthRepositoryImpl(api)
     }
 }

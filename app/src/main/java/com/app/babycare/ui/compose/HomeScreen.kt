@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.app.babycare.domain.model.HealthRecord
 import com.app.babycare.ui.viewmodel.HomeUiState
 import com.app.babycare.ui.viewmodel.TipUi
 
@@ -157,18 +158,6 @@ fun HomeScreen(
                                         color = TextSecondary,
                                         style = MaterialTheme.typography.bodySmall
                                     )
-
-                                    /*Spacer(modifier = Modifier.height(8.dp))
-
-                                    Text(
-                                        text = "${uiState.tips.size} tips disponibles",
-                                        color = Primary,
-                                        fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier
-                                            .align(Alignment.End)
-                                            .padding(top = 8.dp)
-                                            .clickable { onViewAllTips() }
-                                    )*/
                                 }
                             }
                         }
@@ -218,15 +207,51 @@ fun HomeScreen(
                 )
             }
 
-            // Sample items
-            val sampleRecords = listOf(
-                HealthRecordItem("Vacuna", "Pentavalente - Hoy, 9:00 AM", Icons.Default.Add /* placeholder icon */),
-                HealthRecordItem("Medición", "68cm, 7.5kg - Ayer", Icons.Default.Add),
-                HealthRecordItem("Medicamento", "Paracetamol - Hace 2 días", Icons.Default.Add)
-            )
+            // Map domain HealthRecord to UI HealthRecordItem; show message if none
+            val uiRecords: List<HealthRecordItem> = if (uiState.healthRecords.isEmpty()) {
+                // If there are no records, show no items (you may replace this with placeholders)
+                emptyList()
+            } else {
+                uiState.healthRecords.map { r ->
+                    HealthRecordItem(
+                        title = r.vaccine,
+                        subtitle = if (!r.notes.isNullOrEmpty()) "${r.date} · ${r.notes}" else "${r.date} · Bebé ${r.baby_id}",
+                        icon = Icons.Default.Add
+                    )
+                }
+            }
 
-            items(sampleRecords) { item ->
-                HealthRecordRow(item = item, onClick = { onRecordClick(item) })
+            if (uiRecords.isEmpty()) {
+                item {
+                    // If loading records show loading, if error show error, otherwise show a friendly message
+                    when {
+                        uiState.recordsLoading -> {
+                            Text(
+                                text = "Cargando registros...",
+                                color = TextSecondary,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
+                        }
+                        !uiState.recordsError.isNullOrEmpty() -> {
+                            Text(
+                                text = uiState.recordsError ?: "Error al cargar registros",
+                                color = TextSecondary,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
+                        }
+                        else -> {
+                            Text(
+                                text = "No hay registros disponibles",
+                                color = TextSecondary,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
+                        }
+                    }
+                }
+            } else {
+                items(uiRecords) { item ->
+                    HealthRecordRow(item = item, onClick = { onRecordClick(item) })
+                }
             }
 
             item {
@@ -354,8 +379,6 @@ private fun HealthRecordRow(item: HealthRecordItem, onClick: () -> Unit) {
                     Text(text = item.subtitle, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
                 }
             }
-
-            //Icon(imageVector = Icons.Default.ChevronRight, contentDescription = "Open", tint = TextSecondary)
         }
     }
 }
@@ -363,5 +386,16 @@ private fun HealthRecordRow(item: HealthRecordItem, onClick: () -> Unit) {
 @Preview(showBackground = true, backgroundColor = 0xFFFEFEFE)
 @Composable
 private fun HomeScreenPreview() {
-    HomeScreen()
+    // Create a sample HomeUiState with fake records for preview
+    val sampleRecords = listOf(
+        HealthRecord(id = 1, baby_id = 1, date = "2025-11-16", vaccine = "Pentavalente", notes = "9:00 AM"),
+        HealthRecord(id = 2, baby_id = 1, date = "2025-11-15", vaccine = "Medición", notes = "68cm, 7.5kg"),
+        HealthRecord(id = 3, baby_id = 2, date = "2025-11-14", vaccine = "Medicamento", notes = "Paracetamol")
+    )
+    val sampleState = HomeUiState(
+        tips = listOf(TipUi(category = "Sueño", tipText = "Establece una rutina")),
+        tipOfDay = TipUi(category = "Sueño", tipText = "Establece una rutina"),
+        healthRecords = sampleRecords
+    )
+    HomeScreen(uiState = sampleState)
 }
