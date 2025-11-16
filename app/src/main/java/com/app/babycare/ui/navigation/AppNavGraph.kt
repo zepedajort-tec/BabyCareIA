@@ -2,6 +2,7 @@ package com.app.babycare.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -136,8 +137,12 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = Des
 
         composable(Destinations.HOME) {
             val viewModel: HomeViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+            // Si quieres refrescar manualmente: LaunchedEffect(Unit) { viewModel.getDevTips() }
 
             HomeScreen(
+                uiState = uiState,
                 onProfileClick = {
 
                 },
@@ -147,10 +152,10 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = Des
                     }
                 },
                 onChildFriendlyClick = {},
-                onTipClick= {},
-                onViewAllTips = {},
-                onNewRecordClick= {},
-                onViewRecordsClick= {},
+                onTipClick = { /* podrías navegar a detalle del tip */ },
+                onViewAllTips = { /* podrías navegar a la pantalla con todos los tips */ },
+                onNewRecordClick = {},
+                onViewRecordsClick = {},
                 onRecordClick = {}
             )
         }

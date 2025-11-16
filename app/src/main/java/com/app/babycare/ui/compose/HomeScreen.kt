@@ -37,6 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.app.babycare.ui.viewmodel.HomeUiState
+import com.app.babycare.ui.viewmodel.TipUi
 
 // Color tokens from your tailwind config
 private val Primary = Color(0xFFA2D2FF)
@@ -46,7 +48,134 @@ private val LightYellow = Color(0xFFFFF2B2)
 private val SoftGray = Color(0xFFBDE0FE)
 private val TextMain = Color(0xFF111318)
 private val TextSecondary = Color(0xFF636f88)
-private val BorderColor = Color(0xFFBDE0FE)
+
+/*
+  Muevo/defino primero los Composables auxiliares (Header, CardAction, HealthRecordRow)
+  para que estén visibles al ser usados dentro de HomeScreen y evitar "Unresolved reference".
+*/
+
+@Composable
+fun Header(
+    userGreeting: String,
+    onChildFriendlyClick: () -> Unit,
+    onLogoutClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(PastelPink),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "\uD83D\uDC76", // icono baby (puedes sustituir por Icon)
+                    color = Primary,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Column {
+                Text(text = "Hola de nuevo,", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                Text(text = userGreeting, color = TextMain, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            IconButton(onClick = onChildFriendlyClick) {
+                // Icon placeholder
+            }
+            IconButton(onClick = onLogoutClick) {
+                Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout", tint = TextSecondary)
+            }
+        }
+    }
+}
+
+@Composable
+fun CardAction(
+    label: String,
+    iconTint: Color = Primary,
+    iconBg: Color = Primary.copy(alpha = 0.3f),
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
+    Card(
+        modifier = modifier
+            .height(112.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(iconBg),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(imageVector = icon, contentDescription = label, tint = iconTint)
+            }
+            Text(text = label, color = TextMain, fontWeight = FontWeight.Medium)
+        }
+    }
+}
+
+@Composable
+fun HealthRecordRow(item: HealthRecordItem, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(SoftGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(imageVector = item.icon, contentDescription = item.title, tint = Primary)
+                }
+
+                Column {
+                    Text(text = item.title, color = TextMain, fontWeight = FontWeight.Medium)
+                    Text(text = item.subtitle, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
+}
+
+/* ----------------------------------------------------------
+   HomeScreen principal (usa los helpers anteriores)
+   ---------------------------------------------------------- */
 
 data class HealthRecordItem(
     val title: String,
@@ -56,11 +185,12 @@ data class HealthRecordItem(
 
 @Composable
 fun HomeScreen(
+    uiState: HomeUiState = HomeUiState(),
     userGreeting: String = "Mamá de Lucía",
     onProfileClick: () -> Unit = {},
     onChildFriendlyClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
-    onTipClick: () -> Unit = {},
+    onTipClick: (TipUi) -> Unit = {},
     onViewAllTips: () -> Unit = {},
     onNewRecordClick: () -> Unit = {},
     onViewRecordsClick: () -> Unit = {},
@@ -98,7 +228,9 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
-                        .clickable { onTipClick() }
+                        .clickable {
+                            uiState.tips.firstOrNull()?.let { onTipClick(it) }
+                        }
                 ) {
                     Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
                         Box(
@@ -107,39 +239,61 @@ fun HomeScreen(
                                 .clip(CircleShape)
                                 .background(Color(0xFFFFE08A)),
                             contentAlignment = Alignment.Center
-                        ) {
-                            /*Icon(
-                                imageVector = Icons.Default.Lightbulb,
-                                contentDescription = "Tip",
-                                tint = Color(0xFFBB8C05),
-                                modifier = Modifier.size(20.dp)
-                            )*/
-                        }
+                        ) {}
 
                         Spacer(modifier = Modifier.width(10.dp))
 
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Category",
-                                color = TextMain,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "tip_text",
-                                color = TextSecondary,
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            when {
+                                uiState.isLoading -> {
+                                    Text(
+                                        text = "Cargando tips...",
+                                        color = TextMain,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                                !uiState.errorMessage.isNullOrEmpty() -> {
+                                    Text(
+                                        text = uiState.errorMessage ?: "Error",
+                                        color = TextMain,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                }
+                                uiState.tips.isEmpty() -> {
+                                    Text(
+                                        text = "No hay tips disponibles",
+                                        color = TextMain,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                                else -> {
+                                    val first = uiState.tips.first()
+                                    Text(
+                                        text = first.category,
+                                        color = TextMain,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = first.tipText,
+                                        color = TextSecondary,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
 
-                            /*Text(
-                                text = "Ver todos los tips",
-                                color = Primary,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier
-                                    .align(Alignment.End)
-                                    .padding(top = 8.dp)
-                                    .clickable { onViewAllTips() }
-                            )*/
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Text(
+                                        text = "${uiState.tips.size} tips disponibles",
+                                        color = Primary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier
+                                            .align(Alignment.End)
+                                            .padding(top = 8.dp)
+                                            .clickable { onViewAllTips() }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -201,127 +355,6 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(24.dp))
             }
-        }
-    }
-}
-
-@Composable
-private fun Header(
-    userGreeting: String,
-    onChildFriendlyClick: () -> Unit,
-    onLogoutClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(PastelPink),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "\uD83D\uDC76", // icono baby (puedes sustituir por Icon)
-                    color = Primary,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Column {
-                Text(text = "Hola de nuevo,", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
-                Text(text = userGreeting, color = TextMain, fontWeight = FontWeight.Bold)
-            }
-        }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            IconButton(onClick = onChildFriendlyClick) {
-                //Icon(imageVector = Icons.Default.ReceiptLong, contentDescription = "ChildFriendly", tint = TextSecondary)
-            }
-            IconButton(onClick = onLogoutClick) {
-                Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout", tint = TextSecondary)
-            }
-        }
-    }
-}
-
-@Composable
-private fun CardAction(
-    label: String,
-    iconTint: Color = Primary,
-    iconBg: Color = Primary.copy(alpha = 0.3f),
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
-) {
-    Card(
-        modifier = modifier
-            .height(112.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(iconBg),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(imageVector = icon, contentDescription = label, tint = iconTint)
-            }
-            Text(text = label, color = TextMain, fontWeight = FontWeight.Medium)
-        }
-    }
-}
-
-@Composable
-private fun HealthRecordRow(item: HealthRecordItem, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(SoftGray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(imageVector = item.icon, contentDescription = item.title, tint = Primary)
-                }
-
-                Column {
-                    Text(text = item.title, color = TextMain, fontWeight = FontWeight.Medium)
-                    Text(text = item.subtitle, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-
-            //Icon(imageVector = Icons.Default.ChevronRight, contentDescription = "Open", tint = TextSecondary)
         }
     }
 }
