@@ -6,6 +6,7 @@ import com.app.babycare.data.auth.EncryptedTokenStore
 import com.app.babycare.data.auth.TokenStore
 import com.app.babycare.remote.api.AuthApi
 import com.app.babycare.remote.api.BabyApi
+import com.app.babycare.remote.api.DevTipsApi
 import com.app.babycare.remote.api.ParentApi
 import com.google.gson.Gson
 import dagger.Module
@@ -75,5 +76,11 @@ object NetworkModule {
     @Singleton
     fun provideBabyApi(retrofit: Retrofit): BabyApi {
         return retrofit.create(BabyApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDevTipsApi(retrofit: Retrofit): DevTipsApi {
+        return retrofit.create(DevTipsApi::class.java)
     }
 }
